@@ -39,13 +39,7 @@ function xlstocsv_menu(){
 		'page arguments' => array('xlstocsv_form'),
 		'access arguments' => array('access content')
 	);
-	$items['xlsuploadfile'] = array(
-		'title' => t('upload xls'),
-		'description' => t('upload xls'),
-		'page callback' => 'drupal_get_form',
-		'page arguments' => array('xlstocsv_form'),
-		'access arguments' => array('access content')
-	);
+	
 	return $items;
 }
 
