@@ -1,0 +1,12 @@
+name = Convert xls to csv Module
+description = Convert xls to csv Module
+core = 7.x
+
+files[] = xlstocsv.module
+
+
+; Information added by Drupal.org packaging script on 2015-08-19
+version = "7.x-1.9"
+core = "7.x"
+datestamp = "1440020680"
+

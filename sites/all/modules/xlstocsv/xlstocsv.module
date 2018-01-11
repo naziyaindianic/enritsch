@@ -1,0 +1,125 @@
+<?php
+
+
+
+
+
+function xlstocsv_permission() {
+  return array(
+    'administer your module' => array(
+      'title' => t('Administer permission for your module'),
+      'description' => t('Some description that would appear on the permission page..'),
+    ),
+  );
+}
+/**
+ * Implements hook_library().
+ */
+function xlstocsv_library() {
+    if($fc_path = libraries_get_path('PHPExcel')) {
+        $libraries['PHPExcel'] = array(
+            'title' => 'PhpExcel',
+            //'website' => 'http://arshaw.com/fullcalendar',
+            //'version' => '1.6.4',
+            'php' => array(
+               $fc_path . '/PHPExcel/PHPExcel.php' => array(),
+               //$fc_path . '/PHPExcel/IOFactory.php' => array(),
+            ),
+            
+        );
+        return $libraries;
+    }
+}
+function xlstocsv_menu(){
+	$items = array();
+	$items['xlsupload'] = array(
+		'title' => t('upload xls'),
+		'description' => t('upload xls'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xlstocsv_form'),
+		'access arguments' => array('access content')
+	);
+	$items['xlsuploadfile'] = array(
+		'title' => t('upload xls'),
+		'description' => t('upload xls'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xlstocsv_form'),
+		'access arguments' => array('access content')
+	);
+	return $items;
+}
+
+function xlstocsv_form($form , &$form_state){
+	$form = array();
+	
+	$form['upload_file'] = array( 
+		'#title' => t('Upload Sample Work (PDF/DOC/JPG/PNG/XLSX Files only)'), 
+		'#type' => 'managed_file', 
+		'#upload_validators' => array('file_validate_extensions' => array('pdf doc docx jpeg jpg png xlsx')), 
+		'#upload_location' => 'public://uploads/xlsfile/', );
+	
+	$form['submit_button'] = array(
+	    '#type' => 'submit',
+	    '#value' => t('submit'),
+	);
+	
+	return $form;
+}
+
+function xlstocsv_form_submit($form, &$form_state) {
+
+	require $_SERVER['DOCUMENT_ROOT'].'/drupal-7.56/sites/all/libraries/PHPExcel/Classes/PHPExcel/IOFactory.php';
+	
+
+	if($form_state['values']['upload_file'] != ''){ 
+		$upload_file = $form_state['values']['upload_file']; 
+		$file_data = file_load($upload_file);
+		$filename = $file_data->filename;
+		$file1 = explode('.', $filename);
+    	$file_type = $file1[1];
+  		$path = file_create_url($file_data->uri);
+
+  		if($file_type== 'xls' || $file_type== 'xlsx'){
+
+			$file_name_converted = _aeimport_xls_file($path,$file_type);
+			//$file->filename = $file_name_converted;
+		 	if($file_name_converted != ''){
+		 		//drupal_set_messages('success') ;
+		 	}
+	    	
+	    }
+	}
+
+}
+function _aeimport_xls_file($file,$file_type) {
+
+	//require $_SERVER['DOCUMENT_ROOT'].'/drupal-7.56/sites/all/libraries/PHPExcel/Classes/PHPExcel/IOFactory.php';
+	
+	 $file_array = explode('/', $file);
+	 $count = count($file_array);
+	 $file_name = $file_array[$count-1];
+  
+	 $inputFileName = $_SERVER['DOCUMENT_ROOT'].'/drupal-7.56/sites/default/files/uploads/xlsfile/'.$file_name;
+	
+	$inputFileType = 'Excel5';
+
+	if($file_type=="xlsx"){
+		$inputFileType = 'Excel2007';
+	}	
+
+	$objReader = PHPExcel_IOFactory::createReader($inputFileType);
+	$objPHPExcelReader = $objReader->load($inputFileName);
+	$loadedSheetNames = $objPHPExcelReader->getSheetNames();
+	$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcelReader, 'CSV');
+	foreach($loadedSheetNames as $sheetIndex => $loadedSheetName) {
+	    $objWriter->setSheetIndex($sheetIndex);
+	    $file_path = $_SERVER['DOCUMENT_ROOT'].'/drupal-7.56/sites/default/files/uploads/csvfile/'.$loadedSheetName.'.csv';
+	    $data =  $objWriter->save($file_path);
+	}
+
+  	return $loadedSheetName.'.csv';
+	
+}
+
+
+?>
